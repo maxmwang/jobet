@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option go_package = "./internal/proto";
+
+service Jobet {
+  rpc Probe(ProbeRequest) returns (ProbeReply) {}
+}
+
+message ProbeRequest {
+  // name of the company to probe
+  string name = 1;
+
+  // dry run. do not add to the database
+  bool dry = 2;
+
+  // alias to use for the company
+  optional string alias = 3;
+
+  // priority of the company. lower value is higher priority
+  optional uint32 priority = 4;
+}
+
+message ProbeReply {
+  message ProbeSiteResult {
+    // listing site
+    string site = 1;
+
+    // added to the database. always false if dry run
+    bool added = 2;
+
+    // already exists in the database
+    bool exists = 3;
+
+    // number of listings found
+    uint32 count = 4;
+
+    // number of target listings found
+    uint32 target = 5;
+  }
+
+  repeated ProbeSiteResult results = 1;
+}
