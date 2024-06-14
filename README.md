@@ -6,8 +6,13 @@ New features:
 - Priority-rated companies: Higher priority companies are scrapped more frequently, while lower priority are scrapped less frequently. This is implemented to reduce outbound request rate.
 - Pub-sub output: [ZeroMQ](https://zeromq.org/) is the primary form of output for scrape results, decoupling all handlers from the scraping daemon. 
 
+## Design
+
+[Excalidraw Link](https://excalidraw.com/#json=qBltw96lbzPAC9oFickCt,hLp0upC1GatV_7zWDNNSEQ).
+
+![design.png](docs/design.png)
+
 ## Technologies
 
 - [SQLite](https://www.sqlite.org/): Lightweight SQL database
 - [gRPC](https://grpc.io/): Lightweight communication between client and daemon 
-
