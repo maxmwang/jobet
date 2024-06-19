@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
@@ -69,7 +68,7 @@ func Daemon(ctx context.Context, q *db.Queries) {
 		wgCollect.Wait()
 
 		slices.SortFunc(sortedJobs, func(a, b output.Job) int {
-			return strings.Compare(a.UpdatedAt.String(), b.UpdatedAt.String())
+			return a.UpdatedAt.Compare(b.UpdatedAt)
 		})
 
 		output.Log(sortedJobs)
