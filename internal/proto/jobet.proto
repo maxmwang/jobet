@@ -17,7 +17,7 @@ message ProbeRequest {
   string alias = 3;
 
   // priority of the company. lower value is higher priority
-  uint32 priority = 4;
+  int64 priority = 4;
 }
 
 message ProbeReply {
@@ -32,10 +32,10 @@ message ProbeReply {
     bool exists = 3;
 
     // number of listings found
-    uint32 count = 4;
+    int32 count = 4;
 
     // number of target listings found
-    uint32 target = 5;
+    int32 target = 5;
   }
 
   // one per site type

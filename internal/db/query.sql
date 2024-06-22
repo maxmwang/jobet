@@ -21,3 +21,13 @@ LIMIT 1;
 SELECT * FROM companies
 WHERE alias = ?
 LIMIT 1;
+
+-- name: AddCompany :exec
+INSERT INTO companies (
+    name,
+    alias,
+    site,
+    priority
+) VALUES (
+    ?, ?, ?, ?
+);

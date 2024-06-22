@@ -9,6 +9,34 @@ import (
 	"context"
 )
 
+const addCompany = `-- name: AddCompany :exec
+INSERT INTO companies (
+    name,
+    alias,
+    site,
+    priority
+) VALUES (
+    ?, ?, ?, ?
+)
+`
+
+type AddCompanyParams struct {
+	Name     string
+	Alias    string
+	Site     string
+	Priority int64
+}
+
+func (q *Queries) AddCompany(ctx context.Context, arg AddCompanyParams) error {
+	_, err := q.db.ExecContext(ctx, addCompany,
+		arg.Name,
+		arg.Alias,
+		arg.Site,
+		arg.Priority,
+	)
+	return err
+}
+
 const getCompanies = `-- name: GetCompanies :many
 SELECT name, alias, site, priority, created_at from companies
 ORDER BY site, name, priority

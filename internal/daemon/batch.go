@@ -1,17 +1,38 @@
-package output
+package daemon
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
 	"github.com/maxmwang/jobet/internal/db"
+	"github.com/maxmwang/jobet/internal/scrape"
 )
+
+type Batch struct {
+	Priority int64
+	Jobs     []Job
+}
+
+func (b *Batch) Sort() {
+	slices.SortFunc(b.Jobs, func(a, b Job) int {
+		return a.UpdatedAt.Compare(b.UpdatedAt)
+	})
+}
 
 type Job struct {
 	Company   db.Company
 	Title     string
 	UpdatedAt time.Time
+}
+
+func jobFromScrape(j scrape.Job, company db.Company) Job {
+	return Job{
+		Company:   company,
+		Title:     j.Title,
+		UpdatedAt: j.UpdatedAt,
+	}
 }
 
 func (j Job) String() string {
