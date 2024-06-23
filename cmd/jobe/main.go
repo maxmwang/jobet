@@ -14,7 +14,7 @@ func main() {
 	company := flag.String("c", "", "company name")
 	alias := flag.String("a", "", "alias")
 	priority := flag.Int64("p", 5, "priority")
-	dry := flag.Bool("b", false, "dry run")
+	dry := flag.Bool("d", false, "dry run")
 	flag.Parse()
 
 	if *company == "" {
