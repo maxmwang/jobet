@@ -4,13 +4,19 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/maxmwang/jobet/internal/proto"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
+	setupLogger()
+
 	company := flag.String("c", "", "company name")
 	alias := flag.String("a", "", "alias")
 	priority := flag.Int64("p", 5, "priority")
@@ -40,8 +46,20 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("could not probe server: %w", err))
 	}
-	fmt.Println(len(res.Results))
 	for _, r := range res.Results {
-		fmt.Printf("[site=%s]: count=%d, target=%d, exists=%t, added=%t\n", r.Site, r.Count, r.Target, r.Exists, r.Added)
+		log.Info().
+			Int32("count", r.Count).
+			Int32("target", r.Target).
+			Bool("exists", r.Exists).
+			Bool("added", r.Added).
+			Msg(fmt.Sprintf("[site=%s]", r.Site))
 	}
+}
+
+func setupLogger() {
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out:        os.Stdout,
+		NoColor:    false,
+		TimeFormat: time.DateTime,
+	})
 }
