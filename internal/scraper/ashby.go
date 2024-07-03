@@ -1,4 +1,4 @@
-package scrape
+package scraper
 
 import (
 	"fmt"
@@ -6,13 +6,24 @@ import (
 	"strings"
 )
 
-type AshbyScraper struct{}
-
-func NewAshbyScraper() AshbyScraper {
-	return AshbyScraper{}
+type ashbyScraper struct {
+	name string
 }
 
-func (a AshbyScraper) Scrape(companyName string) ([]Job, error) {
+func newAshbyScraper() Scraper {
+	return ashbyScraper{
+		name: SiteAshby,
+	}
+}
+
+func (s ashbyScraper) Scrape(companyName, site string) ([]Job, error) {
+	if site != s.name {
+		return nil, nil
+	}
+	return s.ScrapeAll(companyName)
+}
+
+func (s ashbyScraper) ScrapeAll(companyName string) ([]Job, error) {
 	query := strings.NewReader(fmt.Sprintf(`{"operationName":"ApiJobBoardWithTeams","variables":{"organizationHostedJobsPageName":"%s"},"query":"query ApiJobBoardWithTeams($organizationHostedJobsPageName: String!) {\n  jobBoard: jobBoardWithTeams(\n    organizationHostedJobsPageName: $organizationHostedJobsPageName\n  ) {\n    jobPostings {\n      title\n     }\n  }\n}"}`, companyName))
 	res, err := http.Post("https://jobs.ashbyhq.com/api/non-user-graphql?op=ApiJobBoardWithTeams", "application/json", query)
 
@@ -24,7 +35,7 @@ func (a AshbyScraper) Scrape(companyName string) ([]Job, error) {
 				} `json:"jobPostings"`
 			} `json:"jobBoard"`
 		} `json:"data"`
-	}](companyName, SiteAshby, res, err)
+	}](companyName, s.name, res, err)
 	if err != nil {
 		return nil, err
 	}
@@ -37,4 +48,10 @@ func (a AshbyScraper) Scrape(companyName string) ([]Job, error) {
 	}
 
 	return jobs, nil
+}
+
+func (s ashbyScraper) Sites() []string {
+	return []string{
+		s.name,
+	}
 }

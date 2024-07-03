@@ -1,4 +1,4 @@
-package scrape
+package scraper
 
 import (
 	"fmt"
@@ -6,13 +6,24 @@ import (
 	"time"
 )
 
-type GreenhouseScraper struct{}
-
-func NewGreenhouseScraper() GreenhouseScraper {
-	return GreenhouseScraper{}
+type greenhouseScraper struct {
+	name string
 }
 
-func (a GreenhouseScraper) Scrape(companyName string) ([]Job, error) {
+func newGreenhouseScraper() Scraper {
+	return greenhouseScraper{
+		name: SiteGreenhouse,
+	}
+}
+
+func (s greenhouseScraper) Scrape(companyName, site string) ([]Job, error) {
+	if site != s.name {
+		return nil, nil
+	}
+	return s.ScrapeAll(companyName)
+}
+
+func (s greenhouseScraper) ScrapeAll(companyName string) ([]Job, error) {
 	res, err := http.Get(fmt.Sprintf("https://api.greenhouse.io/v1/boards/%s/jobs", companyName))
 
 	body, err := checkThenDecode[struct {
@@ -20,7 +31,7 @@ func (a GreenhouseScraper) Scrape(companyName string) ([]Job, error) {
 			Title     string `json:"title"`
 			UpdatedAt string `json:"updated_at"`
 		} `json:"jobs"`
-	}](companyName, SiteGreenhouse, res, err)
+	}](companyName, s.name, res, err)
 	if err != nil {
 		return nil, err
 	}
@@ -40,4 +51,10 @@ func (a GreenhouseScraper) Scrape(companyName string) ([]Job, error) {
 	}
 
 	return jobs, nil
+}
+
+func (s greenhouseScraper) Sites() []string {
+	return []string{
+		s.name,
+	}
 }

@@ -1,4 +1,4 @@
-package scrape
+package scraper
 
 import (
 	"encoding/json"
@@ -19,7 +19,9 @@ type Job struct {
 }
 
 type Scraper interface {
-	Scrape(companyName string) ([]Job, error)
+	Scrape(companyName, site string) ([]Job, error)
+	ScrapeAll(companyName string) ([]Job, error)
+	Sites() []string
 }
 
 func checkThenDecode[T any](name, site string, res *http.Response, reqError error) (body T, err error) {

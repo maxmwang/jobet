@@ -7,23 +7,19 @@ import (
 	"time"
 
 	"github.com/maxmwang/jobet/internal/db"
-	"github.com/maxmwang/jobet/internal/scrape"
+	"github.com/maxmwang/jobet/internal/scraper"
 	"github.com/rs/zerolog/log"
 )
 
 type Daemon struct {
-	scrapers map[string]scrape.Scraper
-	q        *db.Queries
+	scraper scraper.Scraper
+	q       *db.Queries
 }
 
 func NewDefaultDaemon(ctx context.Context, q *db.Queries) *Daemon {
 	return &Daemon{
-		scrapers: map[string]scrape.Scraper{
-			scrape.SiteAshby:      scrape.NewAshbyScraper(),
-			scrape.SiteGreenhouse: scrape.NewGreenhouseScraper(),
-			scrape.SiteLever:      scrape.NewLeverScraper(),
-		},
-		q: q,
+		scraper: scraper.NewDefault(),
+		q:       q,
 	}
 }
 
@@ -54,17 +50,8 @@ func (d *Daemon) Start() {
 			go func() {
 				defer wgScrape.Done()
 
-				// get site scraper
-				scraper, ok := d.scrapers[c.Site]
-				if !ok {
-					log.Error().
-						Str("site", c.Site).
-						Msg("scraper not registered")
-					return
-				}
-
 				// scrape for all jobs
-				scrapeJobs, err := scraper.Scrape(c.Name)
+				scrapeJobs, err := d.scraper.Scrape(c.Name, c.Site)
 				if err != nil {
 					log.Error().
 						Str("name", c.Name).

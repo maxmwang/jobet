@@ -1,4 +1,4 @@
-package scrape
+package scraper
 
 import (
 	"fmt"
@@ -6,19 +6,30 @@ import (
 	"time"
 )
 
-type LeverScraper struct{}
-
-func NewLeverScraper() LeverScraper {
-	return LeverScraper{}
+type leverScraper struct {
+	name string
 }
 
-func (a LeverScraper) Scrape(companyName string) ([]Job, error) {
+func newLeverScraper() Scraper {
+	return leverScraper{
+		name: SiteLever,
+	}
+}
+
+func (s leverScraper) Scrape(companyName, site string) ([]Job, error) {
+	if site != s.name {
+		return nil, nil
+	}
+	return s.ScrapeAll(companyName)
+}
+
+func (s leverScraper) ScrapeAll(companyName string) ([]Job, error) {
 	res, err := http.Get(fmt.Sprintf("https://api.lever.co/v0/postings/%s?limit=999", companyName))
 
 	body, err := checkThenDecode[[]struct {
 		Title     string `json:"text"`
 		UpdatedAt int    `json:"createdAt"`
-	}](companyName, SiteLever, res, err)
+	}](companyName, s.name, res, err)
 	if err != nil {
 		return nil, err
 	}
@@ -32,4 +43,10 @@ func (a LeverScraper) Scrape(companyName string) ([]Job, error) {
 	}
 
 	return jobs, nil
+}
+
+func (s leverScraper) Sites() []string {
+	return []string{
+		s.name,
+	}
 }

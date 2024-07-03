@@ -7,7 +7,7 @@ import (
 
 	"github.com/maxmwang/jobet/internal/db"
 	"github.com/maxmwang/jobet/internal/proto"
-	"github.com/maxmwang/jobet/internal/scrape"
+	"github.com/maxmwang/jobet/internal/scraper"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
@@ -15,18 +15,14 @@ import (
 type JobetServer struct {
 	proto.UnimplementedJobetServer
 
-	scrapers map[string]scrape.Scraper
-	q        *db.Queries
+	scraper scraper.Scraper
+	q       *db.Queries
 }
 
 func NewJobetServer(q *db.Queries) *JobetServer {
 	return &JobetServer{
-		scrapers: map[string]scrape.Scraper{
-			scrape.SiteAshby:      scrape.NewAshbyScraper(),
-			scrape.SiteGreenhouse: scrape.NewGreenhouseScraper(),
-			scrape.SiteLever:      scrape.NewLeverScraper(),
-		},
-		q: q,
+		scraper: scraper.NewDefault(),
+		q:       q,
 	}
 }
 
@@ -54,11 +50,11 @@ func (s *JobetServer) Probe(ctx context.Context, req *proto.ProbeRequest) (*prot
 	res := &proto.ProbeReply{
 		Results: make([]*proto.ProbeReply_ProbeSiteResult, 0),
 	}
-	for site, scraper := range s.scrapers {
+	for _, site := range s.scraper.Sites() {
 		added := false
 		_, exists := existingSites[site]
 
-		jobs, err := scraper.Scrape(req.Name)
+		jobs, err := s.scraper.Scrape(req.Name, site)
 		if err != nil {
 			log.Warn().
 				Str("name", req.Name).

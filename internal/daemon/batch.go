@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/maxmwang/jobet/internal/db"
-	"github.com/maxmwang/jobet/internal/scrape"
+	"github.com/maxmwang/jobet/internal/scraper"
 )
 
 type Batch struct {
@@ -27,7 +27,7 @@ type Job struct {
 	UpdatedAt time.Time
 }
 
-func jobFromScrape(j scrape.Job, company db.Company) Job {
+func jobFromScrape(j scraper.Job, company db.Company) Job {
 	return Job{
 		Company:   company,
 		Title:     j.Title,
