@@ -2,10 +2,10 @@ package daemon
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
+	"github.com/maxmwang/jobet/api"
 	"github.com/maxmwang/jobet/internal/db"
 	"github.com/maxmwang/jobet/internal/scraper"
 	"github.com/rs/zerolog/log"
@@ -14,19 +14,20 @@ import (
 type Daemon struct {
 	scraper scraper.Scraper
 	q       *db.Queries
+	p       Publisher
 }
 
-func NewDefaultDaemon(ctx context.Context, q *db.Queries) *Daemon {
+func NewDefaultDaemon(ctx context.Context, q *db.Queries, p Publisher) *Daemon {
 	return &Daemon{
 		scraper: scraper.NewDefault(),
 		q:       q,
+		p:       p,
 	}
 }
 
-func (d *Daemon) Start() {
+func (d *Daemon) Start(ctx context.Context) {
 	t := time.NewTicker(10 * time.Minute)
 	count := 0
-	ctx := context.Background()
 
 	for {
 		priority := getMaxPriority(count)
@@ -44,29 +45,30 @@ func (d *Daemon) Start() {
 			Msg("scraping")
 
 		wgScrape := new(sync.WaitGroup)
-		jobsChan := make(chan []Job)
-		for _, c := range companies {
+		jobsChan := make(chan []*api.ScrapeBatch_Job)
+		for _, company := range companies {
 			wgScrape.Add(1)
 			go func() {
 				defer wgScrape.Done()
 
 				// scrape for all jobs
-				scrapeJobs, err := d.scraper.Scrape(c.Name, c.Site)
+				scrapeJobs, err := d.scraper.Scrape(company.Name, company.Site)
 				if err != nil {
 					log.Error().
-						Str("name", c.Name).
+						Str("name", company.Name).
 						Err(err).
 						Msg("failed to scrape company")
 					return
 				}
 
 				// map and reduce jobs
-				outputJobs := make([]Job, 0)
-				for _, j := range scrapeJobs {
-					outputJob := jobFromScrape(j, c)
-					if outputJob.IsTarget() {
-						outputJobs = append(outputJobs, outputJob)
-					}
+				outputJobs := make([]*api.ScrapeBatch_Job, 0)
+				for _, job := range scrapeJobs {
+					outputJobs = append(outputJobs, &api.ScrapeBatch_Job{
+						Company:   company.Name,
+						Title:     job.Title,
+						UpdatedAt: job.UpdatedAt.Unix(),
+					})
 				}
 
 				jobsChan <- outputJobs
@@ -74,7 +76,7 @@ func (d *Daemon) Start() {
 		}
 
 		wgCollect := new(sync.WaitGroup)
-		allJobs := make([]Job, 0)
+		allJobs := make([]*api.ScrapeBatch_Job, 0)
 		wgCollect.Add(1)
 		go func() {
 			defer wgCollect.Done()
@@ -87,11 +89,14 @@ func (d *Daemon) Start() {
 		close(jobsChan)
 		wgCollect.Wait()
 
-		batch := Batch{
+		batch := &api.ScrapeBatch{
 			Priority: priority,
 			Jobs:     allJobs,
 		}
-		logTemp(batch)
+		err = d.p.Publish(ctx, batch)
+		if err != nil {
+			log.Error().Err(err).Msg("failed to publish batch")
+		}
 
 		<-t.C
 		count = (count + 1) % 144
@@ -109,12 +114,5 @@ func getMaxPriority(count int) int64 {
 		return 2
 	} else {
 		return 1
-	}
-}
-
-func logTemp(batch Batch) {
-	batch.Sort()
-	for _, j := range batch.Jobs {
-		fmt.Println(j)
 	}
 }

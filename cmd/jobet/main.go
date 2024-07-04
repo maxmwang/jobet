@@ -16,20 +16,23 @@ import (
 func main() {
 	setupLogger()
 
+	ctx := context.Background()
+
 	conn, err := db.Connect(false)
 	if err != nil {
 		panic(err)
 	}
 	q := db.New(conn)
 
-	d := daemon.NewDefaultDaemon(context.Background(), q)
+	p := daemon.NewZeroMQPublisher(ctx)
+	d := daemon.NewDefaultDaemon(ctx, q, p)
 	s := server.NewJobetServer(q)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		d.Start()
+		d.Start(ctx)
 	}()
 	wg.Add(1)
 	go func() {

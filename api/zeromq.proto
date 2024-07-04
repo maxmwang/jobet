@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "./api";
+
+message ScrapeBatch {
+  message Job {
+    // name of the company
+    string company = 1;
+
+    // title of the position
+    string title = 2;
+
+    // last updated unix time
+    int64 updatedAt = 3;
+  }
+
+  // batch priority
+  int64 priority = 1;
+
+  // job listings
+  repeated Job jobs = 2;
+}
