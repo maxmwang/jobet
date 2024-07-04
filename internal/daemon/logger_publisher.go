@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/maxmwang/jobet/api"
 	"github.com/maxmwang/jobet/internal/helpers"
@@ -14,7 +15,7 @@ func NewLoggerPublisher(ctx context.Context) Publisher {
 }
 
 func (p loggerPublisher) Publish(ctx context.Context, batch *api.ScrapeBatch) error {
-	helpers.PrintBatchSorted(batch)
+	fmt.Print(helpers.BatchToStringSorted(batch))
 	return nil
 }
 

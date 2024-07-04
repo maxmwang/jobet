@@ -3,22 +3,21 @@ package main
 import (
 	"context"
 	"flag"
-	"os"
 	"sync"
-	"time"
 
 	"github.com/maxmwang/jobet/internal/daemon"
 	"github.com/maxmwang/jobet/internal/db"
 	"github.com/maxmwang/jobet/internal/server"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	e := loadEnv()
 	setupLogger()
 
 	useLogger := flag.Bool("l", false, "use logger publisher")
 	useZeromq := flag.Bool("z", false, "use zeromq publisher")
+	useDiscord := flag.Bool("d", false, "use discord publisher")
 	flag.Parse()
 
 	ctx := context.Background()
@@ -38,6 +37,14 @@ func main() {
 		publishers = append(publishers, daemon.NewZeroMQPublisher(ctx))
 		log.Info().Msg("adding zeromq publisher")
 	}
+	if *useDiscord {
+		discordPublisher, err := daemon.NewDiscordPublisher(ctx, e.botToken)
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to start discord publisher")
+		}
+		publishers = append(publishers, discordPublisher)
+		log.Info().Msg("adding discord publisher")
+	}
 
 	d := daemon.NewDefaultDaemon(ctx, q, publishers...)
 	s := server.NewJobetServer(q)
@@ -55,12 +62,4 @@ func main() {
 	}()
 
 	wg.Wait()
-}
-
-func setupLogger() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{
-		Out:        os.Stdout,
-		NoColor:    false,
-		TimeFormat: time.DateTime,
-	})
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -37,7 +38,7 @@ func main() {
 		log.Info().
 			Int64("priority<", batch.Priority).
 			Msg("received msg")
-		helpers.PrintBatchSorted(batch)
+		fmt.Print(helpers.BatchToStringSorted(batch))
 	}
 }
 
