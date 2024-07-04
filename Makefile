@@ -1,4 +1,4 @@
-.PHONY: gen-proto gen-sqlc
+.PHONY: gen-proto gen-sqlc gen-mocks
 
 gen: gen-proto gen-sqlc gen-mocks
 
