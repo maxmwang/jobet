@@ -43,7 +43,8 @@ func (s ashbyScraper) ScrapeAll(companyName string) ([]Job, error) {
 	jobs := make([]Job, 0)
 	for _, j := range body.Data.JobBoard.JobPostings {
 		jobs = append(jobs, Job{
-			Title: j.Title,
+			Company: companyName,
+			Title:   j.Title,
 		})
 	}
 

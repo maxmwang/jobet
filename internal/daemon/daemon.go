@@ -12,16 +12,16 @@ import (
 )
 
 type Daemon struct {
-	scraper scraper.Scraper
-	q       *db.Queries
-	p       Publisher
+	scraper    scraper.Scraper
+	q          *db.Queries
+	publishers []Publisher
 }
 
-func NewDefaultDaemon(ctx context.Context, q *db.Queries, p Publisher) *Daemon {
+func NewDefaultDaemon(ctx context.Context, q *db.Queries, publishers ...Publisher) *Daemon {
 	return &Daemon{
-		scraper: scraper.NewDefault(),
-		q:       q,
-		p:       p,
+		scraper:    scraper.NewDefault(),
+		q:          q,
+		publishers: publishers,
 	}
 }
 
@@ -64,11 +64,7 @@ func (d *Daemon) Start(ctx context.Context) {
 				// map and reduce jobs
 				outputJobs := make([]*api.ScrapeBatch_Job, 0)
 				for _, job := range scrapeJobs {
-					outputJobs = append(outputJobs, &api.ScrapeBatch_Job{
-						Company:   company.Name,
-						Title:     job.Title,
-						UpdatedAt: job.UpdatedAt.Unix(),
-					})
+					outputJobs = append(outputJobs, job.ToApi())
 				}
 
 				jobsChan <- outputJobs
@@ -93,9 +89,11 @@ func (d *Daemon) Start(ctx context.Context) {
 			Priority: priority,
 			Jobs:     allJobs,
 		}
-		err = d.p.Publish(ctx, batch)
-		if err != nil {
-			log.Error().Err(err).Msg("failed to publish batch")
+		for _, publisher := range d.publishers {
+			err = publisher.Publish(ctx, batch)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to publish batch")
+			}
 		}
 
 		<-t.C

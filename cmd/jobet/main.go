@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"sync"
 	"time"
@@ -16,6 +17,10 @@ import (
 func main() {
 	setupLogger()
 
+	useLogger := flag.Bool("l", false, "use logger publisher")
+	useZeromq := flag.Bool("z", false, "use zeromq publisher")
+	flag.Parse()
+
 	ctx := context.Background()
 
 	conn, err := db.Connect(false)
@@ -24,8 +29,17 @@ func main() {
 	}
 	q := db.New(conn)
 
-	p := daemon.NewZeroMQPublisher(ctx)
-	d := daemon.NewDefaultDaemon(ctx, q, p)
+	publishers := make([]daemon.Publisher, 0)
+	if *useLogger {
+		publishers = append(publishers, daemon.NewLoggerPublisher(ctx))
+		log.Info().Msg("adding logger publisher")
+	}
+	if *useZeromq {
+		publishers = append(publishers, daemon.NewZeroMQPublisher(ctx))
+		log.Info().Msg("adding zeromq publisher")
+	}
+
+	d := daemon.NewDefaultDaemon(ctx, q, publishers...)
 	s := server.NewJobetServer(q)
 
 	wg := sync.WaitGroup{}

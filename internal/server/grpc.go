@@ -3,9 +3,9 @@ package server
 import (
 	"context"
 	"net"
-	"strings"
 
 	"github.com/maxmwang/jobet/internal/db"
+	"github.com/maxmwang/jobet/internal/helpers"
 	"github.com/maxmwang/jobet/internal/proto"
 	"github.com/maxmwang/jobet/internal/scraper"
 	"github.com/rs/zerolog/log"
@@ -65,7 +65,7 @@ func (s *JobetServer) Probe(ctx context.Context, req *proto.ProbeRequest) (*prot
 		}
 		target := 0
 		for _, j := range jobs {
-			if isTarget(j.Title) {
+			if helpers.JobIsTarget(j.Title) {
 				target++
 			}
 		}
@@ -90,21 +90,4 @@ func (s *JobetServer) Probe(ctx context.Context, req *proto.ProbeRequest) (*prot
 	}
 
 	return res, nil
-}
-
-func isTarget(title string) bool {
-	if strings.Index(title, "Intern") == strings.Index(title, "Internal") && strings.Count(title, "Intern") == 1 {
-		return false
-	}
-	if strings.Index(title, "Intern") == strings.Index(title, "International") && strings.Count(title, "Intern") == 1 {
-		return false
-	}
-	if strings.Contains(title, "Software") && strings.Contains(title, "Intern") {
-		return true
-	}
-	if strings.Contains(title, "Platform") && strings.Contains(title, "Intern") {
-		return true
-	}
-
-	return false
 }

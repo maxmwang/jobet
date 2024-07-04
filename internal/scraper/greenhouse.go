@@ -39,7 +39,8 @@ func (s greenhouseScraper) ScrapeAll(companyName string) ([]Job, error) {
 	jobs := make([]Job, 0)
 	for _, resJob := range body.Jobs {
 		j := Job{
-			Title: resJob.Title,
+			Company: companyName,
+			Title:   resJob.Title,
 		}
 
 		parsedTime, err := time.Parse(time.RFC3339, resJob.UpdatedAt)

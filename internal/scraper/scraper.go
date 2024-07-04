@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/maxmwang/jobet/api"
 )
 
 const (
@@ -14,8 +16,17 @@ const (
 )
 
 type Job struct {
+	Company   string
 	Title     string
 	UpdatedAt time.Time
+}
+
+func (j Job) ToApi() *api.ScrapeBatch_Job {
+	return &api.ScrapeBatch_Job{
+		Company:   j.Company,
+		Title:     j.Title,
+		UpdatedAt: j.UpdatedAt.Unix(),
+	}
 }
 
 type Scraper interface {

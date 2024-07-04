@@ -37,6 +37,7 @@ func (s leverScraper) ScrapeAll(companyName string) ([]Job, error) {
 	jobs := make([]Job, 0)
 	for _, j := range body {
 		jobs = append(jobs, Job{
+			Company:   companyName,
 			Title:     j.Title,
 			UpdatedAt: time.UnixMilli(int64(j.UpdatedAt)),
 		})
