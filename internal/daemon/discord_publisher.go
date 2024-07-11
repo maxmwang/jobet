@@ -9,12 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type discordPublisher struct {
+type DiscordPublisher struct {
 	s        *discordgo.Session
 	channels []string
 }
 
-func NewDiscordPublisher(ctx context.Context, botToken string) (Publisher, error) {
+func NewDiscordPublisher(ctx context.Context, botToken string) (*DiscordPublisher, error) {
 	dg, err := discordgo.New("Bot " + botToken)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create discord publisher")
@@ -26,7 +26,7 @@ func NewDiscordPublisher(ctx context.Context, botToken string) (Publisher, error
 		return nil, err
 	}
 
-	p := &discordPublisher{
+	p := &DiscordPublisher{
 		s:        dg,
 		channels: make([]string, 0),
 	}
@@ -44,7 +44,7 @@ func NewDiscordPublisher(ctx context.Context, botToken string) (Publisher, error
 	return p, nil
 }
 
-func (p *discordPublisher) Publish(ctx context.Context, batch *api.ScrapeBatch) error {
+func (p *DiscordPublisher) Publish(ctx context.Context, batch *api.ScrapeBatch) error {
 	for _, channelId := range p.channels {
 		_, err := p.s.ChannelMessageSend(channelId, "```"+helpers.BatchToStringSorted(batch)+"```")
 		if err != nil {
@@ -58,7 +58,7 @@ func (p *discordPublisher) Publish(ctx context.Context, batch *api.ScrapeBatch) 
 	return nil
 }
 
-func (p *discordPublisher) Shutdown(ctx context.Context) error {
+func (p *DiscordPublisher) Shutdown(ctx context.Context) error {
 	if err := p.s.Close(); err != nil {
 		return err
 	}

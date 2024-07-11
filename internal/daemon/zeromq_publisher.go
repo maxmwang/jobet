@@ -9,22 +9,22 @@ import (
 	"gopkg.in/zeromq/goczmq.v4"
 )
 
-type zeroMQPublisher struct {
+type ZeroMQPublisher struct {
 	p *goczmq.Sock
 }
 
-func NewZeroMQPublisher(ctx context.Context) Publisher {
+func NewZeroMQPublisher(ctx context.Context) *ZeroMQPublisher {
 	publisher, err := goczmq.NewPub("tcp://127.0.0.1:5555")
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to start publisher")
 	}
 
-	return zeroMQPublisher{
+	return &ZeroMQPublisher{
 		p: publisher,
 	}
 }
 
-func (p zeroMQPublisher) Publish(ctx context.Context, batch *api.ScrapeBatch) error {
+func (p *ZeroMQPublisher) Publish(ctx context.Context, batch *api.ScrapeBatch) error {
 	msg, err := proto.Marshal(batch)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to marshal message")
@@ -38,7 +38,7 @@ func (p zeroMQPublisher) Publish(ctx context.Context, batch *api.ScrapeBatch) er
 	return nil
 }
 
-func (p zeroMQPublisher) Shutdown(ctx context.Context) error {
+func (p *ZeroMQPublisher) Shutdown(ctx context.Context) error {
 	p.p.Destroy()
 	log.Info().Msg("publisher shutdown")
 
