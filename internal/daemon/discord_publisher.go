@@ -2,6 +2,9 @@ package daemon
 
 import (
 	"context"
+	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/maxmwang/jobet/api"
@@ -14,7 +17,7 @@ type DiscordPublisher struct {
 	channels []string
 }
 
-func NewDiscordPublisher(ctx context.Context, botToken string) (*DiscordPublisher, error) {
+func NewDiscordPublisher(ctx context.Context, botToken string, channels ...string) (*DiscordPublisher, error) {
 	dg, err := discordgo.New("Bot " + botToken)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create discord publisher")
@@ -28,16 +31,20 @@ func NewDiscordPublisher(ctx context.Context, botToken string) (*DiscordPublishe
 
 	p := &DiscordPublisher{
 		s:        dg,
-		channels: make([]string, 0),
+		channels: channels,
 	}
 	dg.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
 			return
 		}
 		if m.Content == ">subscribe" {
-			p.channels = append(p.channels, m.ChannelID)
-			log.Info().Str("channelId", m.ChannelID).Msg("adding subscribed channel")
-			p.s.ChannelMessageSend(m.ChannelID, "subscribing")
+			if slices.Contains(p.channels, m.ChannelID) {
+				p.s.ChannelMessageSend(m.ChannelID, "already subscribed")
+			} else {
+				p.channels = append(p.channels, m.ChannelID)
+				log.Info().Str("channelId", m.ChannelID).Msg("adding subscribed channel")
+				p.s.ChannelMessageSend(m.ChannelID, "subscribing")
+			}
 		}
 	})
 
@@ -45,17 +52,42 @@ func NewDiscordPublisher(ctx context.Context, botToken string) (*DiscordPublishe
 }
 
 func (p *DiscordPublisher) Publish(ctx context.Context, batch *api.ScrapeBatch) error {
-	for _, channelId := range p.channels {
-		_, err := p.s.ChannelMessageSend(channelId, "```"+helpers.BatchToStringSorted(batch)+"```")
-		if err != nil {
-			log.Error().
-				Str("publisher", "discord").
-				Err(err).
-				Msg("failed to send message")
-			return err
+	rawContent := helpers.BatchToStringSorted(batch)
+	content := p.paginate(ctx, rawContent)
+	if len(content) > 0 {
+		for _, channelId := range p.channels {
+			for _, v := range content {
+				_, err := p.s.ChannelMessageSend(channelId, fmt.Sprintf("priority<=%d\n```%s```", batch.Priority, v))
+				if err != nil {
+					log.Error().
+						Str("publisher", "discord").
+						Err(err).
+						Msg("failed to send message")
+					return err
+				}
+			}
 		}
 	}
 	return nil
+}
+
+func (p *DiscordPublisher) paginate(ctx context.Context, content string) []string {
+	pages := make([]string, 0)
+
+	lines := strings.Split(content, "\n")
+	sb := strings.Builder{}
+	for _, v := range lines {
+		if sb.Len()+len(v) > 1950 {
+			pages = append(pages, sb.String())
+			sb.Reset()
+		}
+		sb.WriteString(v)
+		sb.WriteRune('\n')
+	}
+	if sb.Len() > 0 {
+		pages = append(pages, sb.String())
+	}
+	return pages
 }
 
 func (p *DiscordPublisher) Shutdown(ctx context.Context) error {

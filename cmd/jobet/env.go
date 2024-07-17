@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -10,7 +11,8 @@ import (
 )
 
 type env struct {
-	botToken string
+	botToken        string
+	discordChannels []string
 }
 
 func loadEnv() env {
@@ -19,7 +21,8 @@ func loadEnv() env {
 	}
 
 	return env{
-		botToken: os.Getenv("BOT_TOKEN"),
+		botToken:        os.Getenv("BOT_TOKEN"),
+		discordChannels: strings.Split(os.Getenv("DISCORD_CHANNELS"), ","),
 	}
 }
 

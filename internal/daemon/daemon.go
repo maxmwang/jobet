@@ -26,7 +26,7 @@ func NewDefaultDaemon(ctx context.Context, q *db.Queries, publishers ...Publishe
 }
 
 func (d *Daemon) Start(ctx context.Context) {
-	t := time.NewTicker(10 * time.Minute)
+	t := time.NewTicker(30 * time.Minute)
 	count := 0
 
 	for {
@@ -102,13 +102,13 @@ func (d *Daemon) Start(ctx context.Context) {
 }
 
 func getMaxPriority(count int) int64 {
-	if count%144 == 0 { // 1d
+	if count%48 == 0 { // 1d
 		return 5
-	} else if count%36 == 0 { // 6hr
+	} else if count%24 == 0 { // 12hr
 		return 4
-	} else if count%6 == 0 { // 1hr
+	} else if count%6 == 0 { // 3hr
 		return 3
-	} else if count%2 == 0 { // 20min
+	} else if count%2 == 0 { // 1hr
 		return 2
 	} else {
 		return 1

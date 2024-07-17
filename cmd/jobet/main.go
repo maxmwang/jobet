@@ -38,7 +38,7 @@ func main() {
 		log.Info().Msg("adding zeromq publisher")
 	}
 	if *useDiscord {
-		discordPublisher, err := daemon.NewDiscordPublisher(ctx, e.botToken)
+		discordPublisher, err := daemon.NewDiscordPublisher(ctx, e.botToken, e.discordChannels...)
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to start discord publisher")
 		}
