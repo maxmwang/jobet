@@ -442,8 +442,8 @@
     },
     {
       "type": "arrow",
-      "version": 1166,
-      "versionNonce": 1133179405,
+      "version": 1170,
+      "versionNonce": 271396816,
       "index": "b0B",
       "isDeleted": false,
       "id": "YNuEEnWNx3GD6ccB103HF",
@@ -464,7 +464,7 @@
       "frameId": null,
       "roundness": null,
       "boundElements": [],
-      "updated": 1721280518599,
+      "updated": 1721603270737,
       "link": null,
       "locked": false,
       "startBinding": {
@@ -479,7 +479,7 @@
       },
       "lastCommittedPoint": null,
       "startArrowhead": "triangle",
-      "endArrowhead": "triangle",
+      "endArrowhead": null,
       "points": [
         [
           0,
