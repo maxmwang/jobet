@@ -3,24 +3,11 @@
 //   sqlc v1.26.0
 // source: query.sql
 
-package db
+package sqlite
 
 import (
 	"context"
 )
-
-const addChannel = `-- name: AddChannel :exec
-INSERT INTO discord_channels (
-    id
-) VALUES (
-    $1
-)
-`
-
-func (q *Queries) AddChannel(ctx context.Context, id string) error {
-	_, err := q.db.Exec(ctx, addChannel, id)
-	return err
-}
 
 const addCompany = `-- name: AddCompany :exec
 INSERT INTO companies (
@@ -29,19 +16,19 @@ INSERT INTO companies (
     site,
     priority
 ) VALUES (
-     $1, $2, $3, $4
- )
+    ?, ?, ?, ?
+)
 `
 
 type AddCompanyParams struct {
 	Name     string
 	Alias    string
-	Site     Site
-	Priority int32
+	Site     string
+	Priority int64
 }
 
 func (q *Queries) AddCompany(ctx context.Context, arg AddCompanyParams) error {
-	_, err := q.db.Exec(ctx, addCompany,
+	_, err := q.db.ExecContext(ctx, addCompany,
 		arg.Name,
 		arg.Alias,
 		arg.Site,
@@ -50,37 +37,13 @@ func (q *Queries) AddCompany(ctx context.Context, arg AddCompanyParams) error {
 	return err
 }
 
-const getChannels = `-- name: GetChannels :many
-SELECT id FROM discord_channels
-`
-
-func (q *Queries) GetChannels(ctx context.Context) ([]string, error) {
-	rows, err := q.db.Query(ctx, getChannels)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []string
-	for rows.Next() {
-		var id string
-		if err := rows.Scan(&id); err != nil {
-			return nil, err
-		}
-		items = append(items, id)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getCompanies = `-- name: GetCompanies :many
 SELECT name, alias, site, priority, created_at from companies
 ORDER BY site, name, priority
 `
 
 func (q *Queries) GetCompanies(ctx context.Context) ([]Company, error) {
-	rows, err := q.db.Query(ctx, getCompanies)
+	rows, err := q.db.QueryContext(ctx, getCompanies)
 	if err != nil {
 		return nil, err
 	}
@@ -98,6 +61,9 @@ func (q *Queries) GetCompanies(ctx context.Context) ([]Company, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -107,12 +73,12 @@ func (q *Queries) GetCompanies(ctx context.Context) ([]Company, error) {
 
 const getCompaniesByMaxPriority = `-- name: GetCompaniesByMaxPriority :many
 SELECT name, alias, site, priority, created_at FROM companies
-WHERE priority <= $1
+WHERE priority <= ?
 ORDER BY site, priority
 `
 
-func (q *Queries) GetCompaniesByMaxPriority(ctx context.Context, priority int32) ([]Company, error) {
-	rows, err := q.db.Query(ctx, getCompaniesByMaxPriority, priority)
+func (q *Queries) GetCompaniesByMaxPriority(ctx context.Context, priority int64) ([]Company, error) {
+	rows, err := q.db.QueryContext(ctx, getCompaniesByMaxPriority, priority)
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +96,9 @@ func (q *Queries) GetCompaniesByMaxPriority(ctx context.Context, priority int32)
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -139,12 +108,12 @@ func (q *Queries) GetCompaniesByMaxPriority(ctx context.Context, priority int32)
 
 const getCompaniesByName = `-- name: GetCompaniesByName :many
 SELECT name, alias, site, priority, created_at FROM companies
-WHERE name = $1
+WHERE name = ?
 ORDER BY site, priority
 `
 
 func (q *Queries) GetCompaniesByName(ctx context.Context, name string) ([]Company, error) {
-	rows, err := q.db.Query(ctx, getCompaniesByName, name)
+	rows, err := q.db.QueryContext(ctx, getCompaniesByName, name)
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +132,9 @@ func (q *Queries) GetCompaniesByName(ctx context.Context, name string) ([]Compan
 		}
 		items = append(items, i)
 	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
@@ -171,12 +143,12 @@ func (q *Queries) GetCompaniesByName(ctx context.Context, name string) ([]Compan
 
 const getCompanyByAlias = `-- name: GetCompanyByAlias :one
 SELECT name, alias, site, priority, created_at FROM companies
-WHERE alias = $1
+WHERE alias = ?
 LIMIT 1
 `
 
 func (q *Queries) GetCompanyByAlias(ctx context.Context, alias string) (Company, error) {
-	row := q.db.QueryRow(ctx, getCompanyByAlias, alias)
+	row := q.db.QueryRowContext(ctx, getCompanyByAlias, alias)
 	var i Company
 	err := row.Scan(
 		&i.Name,
@@ -190,17 +162,17 @@ func (q *Queries) GetCompanyByAlias(ctx context.Context, alias string) (Company,
 
 const getCompanyByNameAndSite = `-- name: GetCompanyByNameAndSite :one
 SELECT name, alias, site, priority, created_at FROM companies
-WHERE name = $1 AND site = $2
+WHERE name = ? AND site = ?
 LIMIT 1
 `
 
 type GetCompanyByNameAndSiteParams struct {
 	Name string
-	Site Site
+	Site string
 }
 
 func (q *Queries) GetCompanyByNameAndSite(ctx context.Context, arg GetCompanyByNameAndSiteParams) (Company, error) {
-	row := q.db.QueryRow(ctx, getCompanyByNameAndSite, arg.Name, arg.Site)
+	row := q.db.QueryRowContext(ctx, getCompanyByNameAndSite, arg.Name, arg.Site)
 	var i Company
 	err := row.Scan(
 		&i.Name,
@@ -210,14 +182,4 @@ func (q *Queries) GetCompanyByNameAndSite(ctx context.Context, arg GetCompanyByN
 		&i.CreatedAt,
 	)
 	return i, err
-}
-
-const removeChannel = `-- name: RemoveChannel :exec
-DELETE FROM discord_channels
-WHERE id = $1
-`
-
-func (q *Queries) RemoveChannel(ctx context.Context, id string) error {
-	_, err := q.db.Exec(ctx, removeChannel, id)
-	return err
 }

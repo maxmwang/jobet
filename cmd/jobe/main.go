@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/maxmwang/jobet/internal/proto"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -18,16 +19,14 @@ func main() {
 	setupLogger()
 
 	company := flag.String("c", "", "company name")
-	alias := flag.String("a", "", "alias")
-	priority := flag.Int64("p", 5, "priority")
-	dry := flag.Bool("d", false, "dry run")
+	site := flag.String("a", "", "site")
 	flag.Parse()
 
 	if *company == "" {
 		panic("please provide a company name with the -c flag")
 	}
-	if *alias == "" {
-		alias = company
+	if *site == "" {
+		site = company
 	}
 
 	conn, err := grpc.NewClient("localhost:5001", grpc.WithTransportCredentials(insecure.NewCredentials()))
@@ -36,23 +35,27 @@ func main() {
 	}
 	defer conn.Close()
 
-	client := proto.NewJobetClient(conn)
+	client := proto.NewProberClient(conn)
 	res, err := client.Probe(context.Background(), &proto.ProbeRequest{
-		Name:     *company,
-		Dry:      *dry,
-		Alias:    *alias,
-		Priority: *priority,
+		Company: *company,
+		Site:    *site,
 	})
 	if err != nil {
 		panic(fmt.Errorf("could not probe server: %w", err))
 	}
 	for _, r := range res.Results {
-		log.Info().
-			Int32("count", r.Count).
-			Int32("target", r.Target).
-			Bool("exists", r.Exists).
-			Bool("added", r.Added).
-			Msg(fmt.Sprintf("[site=%s]", r.Site))
+		if r.Exists {
+			log.Info().
+				Bool("exists", r.Exists).
+				Int32("priority", r.Priority).
+				Int32("count", r.Count).
+				Msg(fmt.Sprintf("[site=%s]", r.Site))
+		} else {
+			log.Info().
+				Bool("exists", r.Exists).
+				Int32("count", r.Count).
+				Msg(fmt.Sprintf("[site=%s]", r.Site))
+		}
 	}
 }
 

@@ -6,11 +6,13 @@ gen-sqlc:
 	sqlc generate
 
 gen-proto:
-	protoc --go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		internal/proto/jobet.proto
-	protoc --go_out=. --go_opt=paths=source_relative \
+	rm -r ./internal/proto || true # ignore doesn't exist error
+	protoc --go_out=. --go_opt=paths=import \
+		--go-grpc_out=. --go-grpc_opt=paths=import \
+		api/prober.proto
+	protoc --go_out=. --go_opt=paths=import \
 		api/zeromq.proto
 
 gen-mocks:
-	mockgen -source=internal/scraper/scraper.go -destination=internal/scraper/mock_scraper.go -package=scraper Scraper
+	mockgen -source=internal/scrape/scraper.go -destination=internal/mocks/mock_scraper.go -package=mocks Scraper
+	mockgen -source=internal/worker/publisher.go -destination=internal/mocks/mock_publisher.go -package=mocks Publisher

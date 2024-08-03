@@ -2,27 +2,20 @@ package db
 
 import (
 	"context"
-	"database/sql"
-	_ "embed"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/maxmwang/jobet/internal/config"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 )
 
-//go:embed schema.sql
-var ddl string
-
-func Connect(create bool) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "jobet.db")
+func Connect(ctx context.Context, cfg config.Config) (*pgx.Conn, error) {
+	conn, err := pgx.Connect(ctx, cfg.PostgresURI)
 	if err != nil {
-		return nil, err
+		log.Fatal().Err(err).Msg("failed to connect to postgres")
+		return nil, errors.Wrap(err, "failed to connect to postgres")
 	}
 
-	if create {
-		// create tables
-		if _, err = db.ExecContext(context.Background(), ddl); err != nil {
-			return nil, err
-		}
-	}
-
-	return db, nil
+	return conn, nil
 }

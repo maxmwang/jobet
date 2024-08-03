@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+option go_package = "internal/proto";
+
+service Prober {
+  rpc Probe(ProbeRequest) returns (ProbeReply) {}
+}
+
+message ProbeRequest {
+  // name of the company to probe
+  string company = 1;
+
+  // site to probe. if empty, probe all available
+  string site = 2;
+}
+
+message ProbeReply {
+  message Result {
+    // listing site
+    string site = 1;
+
+    // already exists in database
+    bool exists = 2;
+
+    // priority value. 0 if !exists
+    int32 priority = 3;
+
+    // count when website probed
+    int32 count = 4;
+  }
+
+  // one per site type
+  repeated Result results = 1;
+}

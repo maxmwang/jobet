@@ -5,8 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/maxmwang/jobet/api"
 	"github.com/maxmwang/jobet/internal/helpers"
+	api "github.com/maxmwang/jobet/internal/proto"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/protobuf/proto"
@@ -36,7 +37,7 @@ func main() {
 		}
 
 		log.Info().
-			Int64("priority<", batch.Priority).
+			Int32("priority<", batch.Priority).
 			Msg("received msg")
 		fmt.Print(helpers.BatchToStringSorted(batch))
 	}
