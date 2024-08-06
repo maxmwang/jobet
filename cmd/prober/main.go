@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"os"
-	"sync"
 	"time"
-	
+
+	"golang.org/x/sync/errgroup"
+
 	"github.com/maxmwang/jobet/internal/config"
 	"github.com/maxmwang/jobet/internal/db"
 	"github.com/maxmwang/jobet/internal/prober"
@@ -31,16 +32,19 @@ func main() {
 	}
 	dbClient := db.New(conn)
 
-	wg := sync.WaitGroup{}
-
 	proberServer := prober.NewServer(ctx, cfg, scraper, dbClient)
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		proberServer.Start(ctx)
-	}()
 
-	wg.Wait()
+	eg := errgroup.Group{}
+	eg.Go(func() error {
+		log.Info().Msg("starting prober server")
+		return proberServer.Start(ctx)
+	})
+
+	err = eg.Wait()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to start prober server")
+	}
+	log.Info().Msg("shutting down with no errors")
 }
 
 func setupLogger() {

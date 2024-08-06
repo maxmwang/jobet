@@ -63,6 +63,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		log.Info().Msg("starting worker")
 		scrapeWorker.Start(ctx)
 	}()
 
