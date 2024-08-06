@@ -10,17 +10,26 @@ import (
 )
 
 func JobIsTarget(title string) bool {
-	if strings.Index(title, "Intern") == strings.Index(title, "Internal") && strings.Count(title, "Intern") == 1 {
-		return false
+	if strings.Contains(title, "Intern") {
+		index := strings.Index(title, "Intern")
+		if index == strings.Index(title, "Internal") ||
+			index == strings.Index(title, "International") {
+			return false
+		}
+
+		if strings.Contains(title, "Software") ||
+			strings.Contains(title, "Platform") ||
+			strings.Contains(title, "Machine Learning") {
+			return true
+		}
 	}
-	if strings.Index(title, "Intern") == strings.Index(title, "International") && strings.Count(title, "Intern") == 1 {
-		return false
-	}
-	if strings.Contains(title, "Software") && strings.Contains(title, "Intern") {
-		return true
-	}
-	if strings.Contains(title, "Platform") && strings.Contains(title, "Intern") {
-		return true
+
+	if strings.Contains(title, "New Grad") {
+		if strings.Contains(title, "Software") ||
+			strings.Contains(title, "Platform") ||
+			strings.Contains(title, "Machine Learning") {
+			return true
+		}
 	}
 
 	return false
@@ -68,7 +77,7 @@ func BatchToMarkdownTableSorted(b *proto.ScrapeBatch) string {
 }
 
 func JobToString(j *proto.ScrapeBatch_Job) string {
-	if time.Unix(j.UpdatedAt, 0).IsZero() {
+	if j.UpdatedAt == 0 {
 		return fmt.Sprintf("%46s:\t %v", j.Company, j.Title)
 	} else {
 		loc, _ := time.LoadLocation("America/Los_Angeles")

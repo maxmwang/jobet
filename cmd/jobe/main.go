@@ -25,9 +25,6 @@ func main() {
 	if *company == "" {
 		panic("please provide a company name with the -c flag")
 	}
-	if *site == "" {
-		site = company
-	}
 
 	conn, err := grpc.NewClient("localhost:5001", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 	"github.com/maxmwang/jobet/internal/db"
 	"github.com/maxmwang/jobet/internal/helpers"
 	"github.com/maxmwang/jobet/internal/proto"
-	
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -163,6 +163,9 @@ func NewBot(ctx context.Context, cfg config.Config, pollerClient proto.ProberCli
 						))
 					}
 				}
+			}
+			if content.Len() == 0 {
+				content.WriteString("Error: could not scrape.")
 			}
 
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
