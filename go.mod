@@ -14,7 +14,6 @@ require (
 	golang.org/x/sync v0.6.0
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.2
-	gopkg.in/zeromq/goczmq.v4 v4.1.0
 )
 
 require (
