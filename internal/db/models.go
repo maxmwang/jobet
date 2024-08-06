@@ -5,13 +5,64 @@
 package db
 
 import (
-	"time"
+	"database/sql/driver"
+	"fmt"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type Site string
+
+const (
+	SiteAshby      Site = "ashby"
+	SiteGreenhouse Site = "greenhouse"
+	SiteLever      Site = "lever"
+)
+
+func (e *Site) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = Site(s)
+	case string:
+		*e = Site(s)
+	default:
+		return fmt.Errorf("unsupported scan type for Site: %T", src)
+	}
+	return nil
+}
+
+type NullSite struct {
+	Site  Site
+	Valid bool // Valid is true if Site is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullSite) Scan(value interface{}) error {
+	if value == nil {
+		ns.Site, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.Site.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullSite) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.Site), nil
+}
 
 type Company struct {
 	Name      string
 	Alias     string
-	Site      string
-	Priority  int64
-	CreatedAt time.Time
+	Site      Site
+	Priority  int32
+	CreatedAt pgtype.Timestamptz
+}
+
+type DiscordChannel struct {
+	ID        string
+	CreatedAt pgtype.Timestamptz
 }

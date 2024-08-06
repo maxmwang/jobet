@@ -6,28 +6,37 @@ import (
 	"strings"
 	"time"
 
-	"github.com/maxmwang/jobet/api"
+	"github.com/maxmwang/jobet/internal/proto"
 )
 
 func JobIsTarget(title string) bool {
-	if strings.Index(title, "Intern") == strings.Index(title, "Internal") && strings.Count(title, "Intern") == 1 {
-		return false
+	if strings.Contains(title, "Intern") {
+		index := strings.Index(title, "Intern")
+		if index == strings.Index(title, "Internal") ||
+			index == strings.Index(title, "International") {
+			return false
+		}
+
+		if strings.Contains(title, "Software") ||
+			strings.Contains(title, "Platform") ||
+			strings.Contains(title, "Machine Learning") {
+			return true
+		}
 	}
-	if strings.Index(title, "Intern") == strings.Index(title, "International") && strings.Count(title, "Intern") == 1 {
-		return false
-	}
-	if strings.Contains(title, "Software") && strings.Contains(title, "Intern") {
-		return true
-	}
-	if strings.Contains(title, "Platform") && strings.Contains(title, "Intern") {
-		return true
+
+	if strings.Contains(title, "New Grad") {
+		if strings.Contains(title, "Software") ||
+			strings.Contains(title, "Platform") ||
+			strings.Contains(title, "Machine Learning") {
+			return true
+		}
 	}
 
 	return false
 }
 
-func BatchToStringSorted(b *api.ScrapeBatch) string {
-	slices.SortFunc(b.Jobs, func(a, b *api.ScrapeBatch_Job) int {
+func BatchToStringSorted(b *proto.ScrapeBatch) string {
+	slices.SortFunc(b.Jobs, func(a, b *proto.ScrapeBatch_Job) int {
 		if a.UpdatedAt > b.UpdatedAt {
 			return 1
 		}
@@ -44,8 +53,8 @@ func BatchToStringSorted(b *api.ScrapeBatch) string {
 	return sb.String()
 }
 
-func BatchToMarkdownTableSorted(b *api.ScrapeBatch) string {
-	slices.SortFunc(b.Jobs, func(a, b *api.ScrapeBatch_Job) int {
+func BatchToMarkdownTableSorted(b *proto.ScrapeBatch) string {
+	slices.SortFunc(b.Jobs, func(a, b *proto.ScrapeBatch_Job) int {
 		if a.UpdatedAt > b.UpdatedAt {
 			return 1
 		}
@@ -67,8 +76,8 @@ func BatchToMarkdownTableSorted(b *api.ScrapeBatch) string {
 	return sb.String()
 }
 
-func JobToString(j *api.ScrapeBatch_Job) string {
-	if time.Unix(j.UpdatedAt, 0).IsZero() {
+func JobToString(j *proto.ScrapeBatch_Job) string {
+	if j.UpdatedAt == 0 {
 		return fmt.Sprintf("%46s:\t %v", j.Company, j.Title)
 	} else {
 		loc, _ := time.LoadLocation("America/Los_Angeles")
