@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 	"time"
-	
+
 	"github.com/maxmwang/jobet/internal/config"
 	"github.com/maxmwang/jobet/internal/db"
 	"github.com/maxmwang/jobet/internal/discord"
@@ -25,7 +25,6 @@ func main() {
 	defer cancel()
 
 	useLogger := flag.Bool("l", false, "use logger publisher")
-	useZeromq := flag.Bool("z", false, "use zeromq publisher")
 	useDiscord := flag.Bool("d", false, "use discord publisher")
 	flag.Parse()
 	cfg := config.LoadEnv()
@@ -48,10 +47,6 @@ func main() {
 		publishers = append(publishers, worker.NewLoggerPublisher(ctx))
 		log.Info().Msg("adding logger publisher")
 	}
-	if *useZeromq {
-		publishers = append(publishers, worker.NewZeroMQPublisher(ctx))
-		log.Info().Msg("adding zeromq publisher")
-	}
 	if *useDiscord {
 		discordBot, err := discord.NewBot(ctx, cfg, proberClient, dbClient)
 		if err != nil {
@@ -68,6 +63,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		log.Info().Msg("starting worker")
 		scrapeWorker.Start(ctx)
 	}()
 
