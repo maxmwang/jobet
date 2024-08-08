@@ -25,6 +25,7 @@ func main() {
 	defer cancel()
 
 	useLogger := flag.Bool("l", false, "use logger publisher")
+	useZeromq := flag.Bool("z", false, "use zeromq publisher")
 	useDiscord := flag.Bool("d", false, "use discord publisher")
 	flag.Parse()
 	cfg := config.LoadEnv()
@@ -46,6 +47,10 @@ func main() {
 	if *useLogger {
 		publishers = append(publishers, worker.NewLoggerPublisher(ctx))
 		log.Info().Msg("adding logger publisher")
+	}
+	if *useZeromq {
+		publishers = append(publishers, worker.NewZeroMQPublisher(ctx))
+		log.Info().Msg("adding zeromq publisher")
 	}
 	if *useDiscord {
 		discordBot, err := discord.NewBot(ctx, cfg, proberClient, dbClient)
