@@ -200,8 +200,15 @@ func (b *Bot) Publish(ctx context.Context, batch *proto.ScrapeBatch) error {
 	if len(content) > 0 {
 		eg.Go(func() error {
 			for _, channelId := range channels {
-				for _, v := range content {
-					_, err = b.ChannelMessageSend(channelId, fmt.Sprintf("priority<=%d\n```%s```", batch.Priority, v))
+				for i, v := range content {
+					var msg string
+					if i == 0 {
+						msg = fmt.Sprintf("priority<=%d\n```%s```", batch.Priority, v)
+					} else {
+						msg = fmt.Sprintf("```%s```", v)
+					}
+
+					_, err := b.ChannelMessageSend(channelId, msg)
 					if err != nil {
 						return errors.Wrap(err, "failed to send message")
 					}
@@ -223,7 +230,7 @@ func (b *Bot) paginate(ctx context.Context, content string) []string {
 	lines := strings.Split(content, "\n")
 	sb := strings.Builder{}
 	for _, v := range lines {
-		if sb.Len()+len(v) > 1950 {
+		if sb.Len()+len(v) > 1980 {
 			pages = append(pages, sb.String())
 			sb.Reset()
 		}
