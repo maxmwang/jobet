@@ -41,7 +41,7 @@ func (s leverScraper) ScrapeAll(companyName string) ([]*proto.ScrapeBatch_Job, e
 		jobs = append(jobs, &proto.ScrapeBatch_Job{
 			Company:   companyName,
 			Title:     j.Title,
-			UpdatedAt: int64(j.UpdatedAt),
+			UpdatedAt: int64(j.UpdatedAt / 1000),
 		})
 	}
 
