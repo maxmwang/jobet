@@ -18,11 +18,11 @@ import (
 
 type Bot struct {
 	*discordgo.Session
-	pollerClient proto.ProberClient
+	proberClient proto.ProberClient
 	dbClient     *db.Queries
 }
 
-func NewBot(ctx context.Context, cfg config.Config, pollerClient proto.ProberClient, dbClient *db.Queries) (*Bot, error) {
+func NewBot(ctx context.Context, cfg config.Config, proberClient proto.ProberClient, dbClient *db.Queries) (*Bot, error) {
 	s, err := discordgo.New("Bot " + cfg.DiscordBotToken)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to initialize discord bot session")
@@ -34,7 +34,7 @@ func NewBot(ctx context.Context, cfg config.Config, pollerClient proto.ProberCli
 
 	b := &Bot{
 		Session:      s,
-		pollerClient: pollerClient,
+		proberClient: proberClient,
 		dbClient:     dbClient,
 	}
 
@@ -140,7 +140,7 @@ func NewBot(ctx context.Context, cfg config.Config, pollerClient proto.ProberCli
 				}
 			}
 
-			res, err := b.pollerClient.Probe(ctx, req)
+			res, err := b.proberClient.Probe(ctx, req)
 			content := strings.Builder{}
 			if err != nil {
 				content.WriteString("Error: failed to probe service.")
@@ -171,7 +171,7 @@ func NewBot(ctx context.Context, cfg config.Config, pollerClient proto.ProberCli
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: content.String(),
+					Content: "Probe results for " + req.Company + "\n```" + content.String() + "```",
 				},
 			})
 			if err != nil {
