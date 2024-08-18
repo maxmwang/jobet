@@ -8,11 +8,13 @@ New features:
 
 ## Design
 
-[Excalidraw Link](https://excalidraw.com/#json=qBltw96lbzPAC9oFickCt,hLp0upC1GatV_7zWDNNSEQ).
+[Excalidraw Link](https://excalidraw.com/#json=E4jhO9eSwll9UDRF99sWG,_dPpJ1r9beuzbokHm3N7-Q).
 
-![design.png](docs/design.png)
+![design.png](docs/design_v2.png)
 
 ## Technologies
 
 - [SQLite](https://www.sqlite.org/): Lightweight SQL database
-- [gRPC](https://grpc.io/): Lightweight communication between client and daemon 
+- [gRPC](https://grpc.io/): Lightweight communication between services 
+- [ZeroMQ](https://zeromq.org/): Zero-Broker message queue
+- [Supabase](https://supabase.com/): Open-source cloud platform
