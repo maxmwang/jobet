@@ -7,7 +7,6 @@ import (
 
 	"github.com/maxmwang/jobet/internal/config"
 	"github.com/maxmwang/jobet/internal/db"
-	"github.com/maxmwang/jobet/internal/helpers"
 	"github.com/maxmwang/jobet/internal/proto"
 
 	"github.com/bwmarrin/discordgo"
@@ -171,7 +170,7 @@ func NewBot(ctx context.Context, cfg config.Config, proberClient proto.ProberCli
 			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "Probe results for " + req.Company + "\n```" + content.String() + "```",
+					Content: "Probe results for `" + req.Company + "`:\n```" + content.String() + "```",
 				},
 			})
 			if err != nil {
@@ -194,8 +193,10 @@ func (b *Bot) Publish(ctx context.Context, batch *proto.ScrapeBatch) error {
 		return errors.Wrap(err, "failed to get discord channels")
 	}
 
+	s := newSquashedJobs(batch)
+
 	eg := errgroup.Group{}
-	content := b.paginate(ctx, helpers.BatchToStringSorted(batch))
+	content := b.paginate(ctx, s.String())
 	if len(content) > 0 {
 		eg.Go(func() error {
 			for _, channelId := range channels {
