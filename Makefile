@@ -23,4 +23,4 @@ build-tsunami:
 	GOOS=linux GOARCH=amd64 go build -o build ./...
 
 local-deploy: build-tsunami
-	scp scp build/* maxmwang@tsunami.ocf.berkeley.edu:~/jobet/build
+	scp build/* maxmwang@tsunami.ocf.berkeley.edu:~/jobet/build
