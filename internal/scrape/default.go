@@ -51,7 +51,7 @@ func (s defaultScraper) ScrapeAll(companyName string) ([]*proto.ScrapeBatch_Job,
 
 func (s defaultScraper) Sites() []string {
 	sites := make([]string, 0)
-	for site, _ := range s.scrapers {
+	for site := range s.scrapers {
 		sites = append(sites, site)
 	}
 	return sites

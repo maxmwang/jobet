@@ -3,6 +3,7 @@ package scrape
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/maxmwang/jobet/internal/db"
 	"github.com/maxmwang/jobet/internal/proto"
@@ -40,7 +41,7 @@ func (s leverScraper) ScrapeAll(companyName string) ([]*proto.ScrapeBatch_Job, e
 	for _, j := range body {
 		jobs = append(jobs, &proto.ScrapeBatch_Job{
 			Company:   companyName,
-			Title:     j.Title,
+			Title:     strings.Trim(j.Title, " "),
 			UpdatedAt: int64(j.UpdatedAt / 1000),
 		})
 	}

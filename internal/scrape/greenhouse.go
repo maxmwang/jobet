@@ -3,6 +3,7 @@ package scrape
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/maxmwang/jobet/internal/db"
@@ -43,7 +44,7 @@ func (s greenhouseScraper) ScrapeAll(companyName string) ([]*proto.ScrapeBatch_J
 	for _, resJob := range body.Jobs {
 		j := &proto.ScrapeBatch_Job{
 			Company: companyName,
-			Title:   resJob.Title,
+			Title:   strings.Trim(resJob.Title, " "),
 		}
 
 		parsedTime, err := time.Parse(time.RFC3339, resJob.UpdatedAt)

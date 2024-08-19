@@ -47,7 +47,7 @@ func (s ashbyScraper) ScrapeAll(companyName string) ([]*proto.ScrapeBatch_Job, e
 	for _, j := range body.Data.JobBoard.JobPostings {
 		jobs = append(jobs, &proto.ScrapeBatch_Job{
 			Company: companyName,
-			Title:   j.Title,
+			Title:   strings.Trim(j.Title, " "),
 		})
 	}
 
